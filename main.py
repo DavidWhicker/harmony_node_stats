@@ -23,7 +23,7 @@ while True:
         if not enabled or not active:
             log.error("Harmony Service error")
             post_to_vstats({
-                "unique_name": NODE_ARRAY.get('unique_name'),
+                "unique_name": node.get('unique_name'),
                 "hostname": hostname,
                 "shard": node.get('shard'),
                 "service_name": node.get('service_name'),
