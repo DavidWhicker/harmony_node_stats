@@ -15,10 +15,10 @@ while True:
     log.info('Command Center Loop - Start')
     
     load = os.getloadavg()  # Returns a tuple
-    space = get_available_space()
 
     for node in NODE_ARRAY:
-        enabled, active = check_service_status(node['service_name'])
+        enabled, active = check_service_status(node.get('service_name'))
+        space = get_available_space(node.get('harmony_folder'))
 
         if not enabled or not active:
             if not enabled:
@@ -39,6 +39,7 @@ while True:
         else:
             node_stats = getNodeStats(node)
             if node_stats and 'consensus' in node_stats:
+                log.info("Found node_stats and consensus.")
                 try:                    
                     post_to_vstats({
                         "unique_name": node.get('unique_name'),
@@ -59,6 +60,7 @@ while True:
                 except Exception as e:
                     log.error(f'Problem getting sync data: {e}')
             else:
+                log.info(f"node_stats or consensus not found.")
                 post_to_vstats({
                     "unique_name": node.get('unique_name'),
                     "hostname": hostname,

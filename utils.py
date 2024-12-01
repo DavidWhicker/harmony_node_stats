@@ -122,46 +122,32 @@ def getSyncRemote(node: dict, url: str):
     return int(block_number_hex, 16)
 
 
-def get_available_space():
-    # Define the directories to check
-    directories = ['harmony/harmony_db_0', 'harmony0/harmony_db_0', 'harmony1/harmony_db_0', 'harmony2/harmony_db_0', 'harmony3/harmony_db_0', 'harmony4/harmony_db_0']
-
-    # Initialize a dictionary to store the results
-    results = {}
+def get_available_space(folder: str):
+    # If folder starts with ~/ expand it out
+    if folder.startswith('~/'):
+        folder = os.path.expanduser(folder)
     
-    # Loop through the directories and run du -sh and df
-    for directory in directories:
-        full_directory = os.path.join(os.path.expanduser('~'), directory)
-        if os.path.exists(full_directory):
-            try:
-                # Run du -sh to get the size
-                du_output = subprocess.check_output(['du', '-sh', full_directory]).decode('utf-8')
-                # Extract the size from the output
-                size = du_output.split('\t')[0]
-                # Run df to get the free space
-                df_output = subprocess.check_output(['df', '-h', full_directory]).decode('utf-8')
-                # Extract the free space from the output
-                free = df_output.split('\n')[1].split()[3]
-                # Add the result to the dictionary
-                results[directory] = {'size': size, 'free': free}
-            except subprocess.CalledProcessError as e:
-                # If the command fails, print an error message and continue
-                print(f"Error running du -sh or df on {directory}: {e}")
-        else:
-            # If the directory does not exist, skip it
-            continue
-
-    # Check if all directories have the same size
-    if len(results) > 0:
-        sizes = [result['size'] for result in results.values()]
-        frees = [result['free'] for result in results.values()]
-        return_text = "\n"
-        for directory, size in results.items():
-            return_text += f"{directory.replace('/harmony_db_0', '')}: {size['size']} used / {size['free']} free\n"
+    if os.path.exists(folder):
+        try:
+            # Run du -sh to get the size
+            du_output = subprocess.check_output(['du', '-sh', folder + '/harmony_db_0']).decode('utf-8')
+            # Extract the size from the output
+            size = du_output.split('\t')[0]
+            # Run df to get the free space
+            df_output = subprocess.check_output(['df', '-h', folder + '/harmony_db_0']).decode('utf-8')
+            # Extract the free space from the output
+            free = df_output.split('\n')[1].split()[3]
+            # Find the index of the last /
+            last_slash_index = folder.rfind('/')
+            # Return the one-line string
+            return f"{folder[last_slash_index + 1:]}: {size} used / {free} free"
+        except subprocess.CalledProcessError as e:
+            # If the command fails, print an error message and continue
+            print(f"Error running du -sh or df on {folder}: {e}")
+            return f"Error: {folder}"
     else:
-        # If no directories exist, print a message
-        return_text = "No directories exist."
-    return return_text
+        # If the directory does not exist, return an error message
+        return f"Directory does not exist: {folder}"
 
 def post_to_vstats(data):
     try:
