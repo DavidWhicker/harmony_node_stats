@@ -21,7 +21,10 @@ while True:
         enabled, active = check_service_status(node['service_name'])
 
         if not enabled or not active:
-            log.error("Harmony Service error")
+            if not enabled:
+                log.error(f"{node['service_name']} Service not enabled")
+            if not active:
+                log.error(f"{node['service_name']} Service not active")
             post_to_vstats({
                 "unique_name": node.get('unique_name'),
                 "hostname": hostname,
